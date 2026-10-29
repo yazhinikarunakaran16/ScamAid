@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamAid - Scam Message Checker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="logo">🛡️ ScamAid</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Got a suspicious message?</h1>
+      <p>Paste it below and ScamAid will tell you if it is a scam in seconds.</p>
+    </section>
+
+    <section class="card">
+      <textarea id="message" rows="6" placeholder="Paste the SMS or message here..."></textarea>
+      <button id="checkBtn">Check Message</button>
+    </section>
+
+    <section id="result" class="card result hidden">
+      <div class="verdict-row">
+        <span id="verdict" class="badge"></span>
+        <span id="scoreText"></span>
+      </div>
+      <div class="meter"><div id="meterFill" class="meter-fill"></div></div>
+
+      <h3>Why?</h3>
+      <p id="reason"></p>
+
+      <h3>Red flags</h3>
+      <div id="flags" class="flags"></div>
+
+      <h3>What should you do?</h3>
+      <p id="advice"></p>
+    </section>
+
+    <section class="how">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step"><b>1. Paste</b><p>Copy the message you received.</p></div>
+        <div class="step"><b>2. Analyze</b><p>AI and rule checks look for scam patterns.</p></div>
+        <div class="step"><b>3. Stay safe</b><p>Get a risk score and clear advice.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>ScamAid · Built for the Meta Global AI Developer Hackathon</footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
