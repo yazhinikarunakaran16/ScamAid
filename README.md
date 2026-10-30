@@ -42,5 +42,10 @@ uvicorn app:app --reload
 🔗 **Live demo:** https://scamaid.onrender.com
 ## Screenshots
 
-![Light mode](screenshots/light.png)
-![Dark mode](screenshots/dark.png)
+### Light mode
+![Light mode 1](screenshots/light.png)
+![Light mode 2](screenshots/light2.png)
+
+### Dark mode
+![Dark mode 1](screenshots/dark.png)
+![Dark mode 2](screenshots/dark2.png)
