@@ -1,9 +1,37 @@
 const btn = document.getElementById("checkBtn");
 const input = document.getElementById("message");
 const resultBox = document.getElementById("result");
+const themeBtn = document.getElementById("themeBtn");
 
 const COLORS = { safe: "#16a34a", suspicious: "#f59e0b", scam: "#dc2626" };
 
+// ---------- Theme (dark / light) ----------
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  if (themeBtn) themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
+}
+
+let savedTheme = null;
+try { savedTheme = localStorage.getItem("theme"); } catch (e) {}
+applyTheme(savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+
+if (themeBtn) {
+  themeBtn.addEventListener("click", () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+}
+
+// ---------- Example buttons ----------
+document.querySelectorAll(".ex-btn").forEach(b => {
+  b.addEventListener("click", () => {
+    input.value = b.dataset.text;
+    input.focus();
+  });
+});
+
+// ---------- Check message ----------
 btn.addEventListener("click", async () => {
   const text = input.value.trim();
   if (!text) {

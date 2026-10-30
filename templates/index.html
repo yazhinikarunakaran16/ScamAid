@@ -9,6 +9,7 @@
 <body>
   <header class="nav">
     <div class="logo">🛡️ ScamAid</div>
+    <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle dark mode">🌙</button>
   </header>
 
   <main>
@@ -19,6 +20,14 @@
 
     <section class="card">
       <textarea id="message" rows="6" placeholder="Paste the SMS or message here..."></textarea>
+
+      <div class="examples">
+        <span>Try an example:</span>
+        <button type="button" class="ex-btn" data-text="Dear customer, your SBI account will be blocked today. Update KYC now: http://sbi-kyc.xyz">Bank scam</button>
+        <button type="button" class="ex-btn" data-text="Your parcel is held at customs. Pay Rs 50 immediately: www.track-parcel.top">Parcel scam</button>
+        <button type="button" class="ex-btn" data-text="Amma, I will reach home by 7 pm. Please keep dinner ready.">Normal message</button>
+      </div>
+
       <button id="checkBtn">Check Message</button>
     </section>
 
@@ -53,4 +62,4 @@
 
   <script src="/static/script.js"></script>
 </body>
-</html>
+</

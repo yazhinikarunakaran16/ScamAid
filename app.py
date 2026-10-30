@@ -24,14 +24,27 @@ class Message(BaseModel):
 SUSPICIOUS_WORDS = ["urgent", "otp", "kyc", "blocked", "winner", "prize",
                     "lottery", "click here", "verify now", "refund", "suspended"]
 
+SUSPICIOUS_WORDS = [
+    "urgent", "immediately", "otp", "kyc", "pan card", "aadhaar", "blocked",
+    "suspended", "expire", "winner", "prize", "lottery", "congratulations",
+    "click here", "verify now", "update now", "refund", "cashback",
+    "upi pin", "cvv", "password", "electricity bill", "disconnected",
+    "parcel", "customs", "courier", "work from home", "part time job",
+    "earn daily", "investment", "double your money", "loan approved",
+    "account will be", "legal action", "arrest", "police", "sim card",
+    "பரிசு", "லாட்டரி", "உடனே", "வங்கி", "கணக்கு", "முடக்கம்",
+]
+
 def rule_check(text: str):
     flags = []
     low = text.lower()
     for w in SUSPICIOUS_WORDS:
         if w in low:
             flags.append(f"Suspicious word: {w}")
-    if re.search(r"https?://|bit\.ly|tinyurl", low):
+    if re.search(r"https?://|www\.|bit\.ly|tinyurl|\.xyz|\.top|\.click", low):
         flags.append("Contains a link")
+    if re.search(r"\b\d{4,8}\b", low) and "otp" in low:
+        flags.append("Mentions an OTP code")
     return flags
 
 PROMPT = """You are a scam SMS detector. Analyze the message and reply ONLY with JSON:
