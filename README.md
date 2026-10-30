@@ -39,3 +39,4 @@ uvicorn app:app --reload
 ```
 
 5. Open http://127.0.0.1:8000
+🔗 **Live demo:** https://scamaid.onrender.com
