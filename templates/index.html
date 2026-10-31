@@ -15,7 +15,7 @@
   <main>
     <section class="hero">
       <h1>Got a suspicious message?</h1>
-      <p>Paste it below and ScamAid will tell you if it is a scam in seconds.</p>
+      <p>Paste it below. ScamAid shows what looks suspicious and what to do safely.</p>
     </section>
 
     <section class="card">
@@ -31,7 +31,7 @@
       <button id="checkBtn">Check Message</button>
     </section>
 
-        <section id="result" class="card result hidden">
+    <section id="result" class="card result hidden">
       <div class="verdict-row">
         <span id="verdict" class="badge"></span>
         <span id="scoreText"></span>
@@ -41,22 +41,24 @@
       <h3>Your message</h3>
       <div id="highlighted" class="highlighted"></div>
 
-      <h3>Why?</h3>
-      <p id="reason"></p>
+      <h3>Warning signs</h3>
+      <div id="findings" class="findings"></div>
 
-      <h3>Red flags</h3>
-      <div id="flags" class="flags"></div>
+      <h3>Summary</h3>
+      <p id="reason"></p>
 
       <h3>What should you do?</h3>
       <p id="advice"></p>
+
+      <p class="note">This is an estimate, not proof. If unsure, contact the company through its official app, website or the number on your card.</p>
     </section>
 
     <section class="how">
       <h2>How it works</h2>
       <div class="steps">
         <div class="step"><b>1. Paste</b><p>Copy the message you received.</p></div>
-        <div class="step"><b>2. Analyze</b><p>AI and rule checks look for scam patterns.</p></div>
-        <div class="step"><b>3. Stay safe</b><p>Get a risk score and clear advice.</p></div>
+        <div class="step"><b>2. Analyze</b><p>Rule-based checks look for common scam warning signs.</p></div>
+        <div class="step"><b>3. Stay safe</b><p>Get the reasons and a safe next step.</p></div>
       </div>
     </section>
   </main>
@@ -65,4 +67,4 @@
 
   <script src="/static/script.js"></script>
 </body>
-</
+</html>

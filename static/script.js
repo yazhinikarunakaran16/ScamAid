@@ -5,16 +5,14 @@ const themeBtn = document.getElementById("themeBtn");
 
 const COLORS = { safe: "#16a34a", suspicious: "#f59e0b", scam: "#dc2626" };
 
-// ---------- Theme (dark / light) ----------
+// ---------- Theme ----------
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
   if (themeBtn) themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
 }
-
 let savedTheme = null;
 try { savedTheme = localStorage.getItem("theme"); } catch (e) {}
 applyTheme(savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-
 if (themeBtn) {
   themeBtn.addEventListener("click", () => {
     const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
@@ -38,10 +36,8 @@ btn.addEventListener("click", async () => {
     alert("Please paste a message first.");
     return;
   }
-
   btn.disabled = true;
   btn.textContent = "Checking...";
-
   try {
     const res = await fetch("/analyze", {
       method: "POST",
@@ -53,7 +49,6 @@ btn.addEventListener("click", async () => {
   } catch (err) {
     alert("Error: " + err.message);
   }
-
   btn.disabled = false;
   btn.textContent = "Check Message";
 });
@@ -66,7 +61,8 @@ function showResult(data) {
   badge.textContent = verdict;
   badge.className = "badge " + verdict;
 
-  document.getElementById("scoreText").textContent = "Risk score: " + score + "/100";
+  const label = data.mode === "ai" ? "Risk score (AI-assisted)" : "Risk score (rule-based estimate)";
+  document.getElementById("scoreText").textContent = label + ": " + score + "/100";
 
   const fill = document.getElementById("meterFill");
   fill.style.background = COLORS[verdict] || COLORS.suspicious;
@@ -75,35 +71,46 @@ function showResult(data) {
 
   document.getElementById("reason").textContent = data.reason || "";
   document.getElementById("advice").textContent = data.advice || "";
-    highlight(input.value, data.matched || []);
 
-  const flagsBox = document.getElementById("flags");
-  flagsBox.innerHTML = "";
-  if (data.flags && data.flags.length) {
-    data.flags.forEach(f => {
-      const span = document.createElement("span");
-      span.className = "flag";
-      span.textContent = f;
-      flagsBox.appendChild(span);
+  highlight(input.value, data.matched || []);
+
+  const box = document.getElementById("findings");
+  box.innerHTML = "";
+  if (data.findings && data.findings.length) {
+    data.findings.forEach(f => {
+      const item = document.createElement("div");
+      item.className = "finding";
+      const t = document.createElement("b");
+      t.textContent = f.title;
+      const p = document.createElement("p");
+      p.textContent = f.explain;
+      item.appendChild(t);
+      item.appendChild(p);
+      if (f.found && f.found.length) {
+        const s = document.createElement("span");
+        s.className = "found";
+        s.textContent = "Found: " + f.found.join(", ");
+        item.appendChild(s);
+      }
+      box.appendChild(item);
     });
   } else {
-    const p = document.createElement("span");
-    p.className = "no-flags";
-    p.textContent = "No obvious red flags found.";
-    flagsBox.appendChild(p);
+    const n = document.createElement("span");
+    n.className = "no-flags";
+    n.textContent = "No common scam warning signs found.";
+    box.appendChild(n);
   }
 
   resultBox.classList.remove("hidden");
   resultBox.scrollIntoView({ behavior: "smooth" });
 }
+
 function highlight(text, words) {
   const box = document.getElementById("highlighted");
   box.innerHTML = "";
-
   const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   const parts = ["https?:\\/\\/\\S+", "www\\.\\S+", ...escaped];
   const re = new RegExp("(" + parts.join("|") + ")", "gi");
-
   text.split(re).forEach((piece, i) => {
     if (!piece) return;
     if (i % 2 === 1) {
