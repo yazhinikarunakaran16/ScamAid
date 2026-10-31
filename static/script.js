@@ -51,7 +51,7 @@ btn.addEventListener("click", async () => {
     const data = await res.json();
     showResult(data);
   } catch (err) {
-    alert("Something went wrong. Is the server running?");
+    alert("Error: " + err.message);
   }
 
   btn.disabled = false;
@@ -75,6 +75,7 @@ function showResult(data) {
 
   document.getElementById("reason").textContent = data.reason || "";
   document.getElementById("advice").textContent = data.advice || "";
+    highlight(input.value, data.matched || []);
 
   const flagsBox = document.getElementById("flags");
   flagsBox.innerHTML = "";
@@ -94,4 +95,24 @@ function showResult(data) {
 
   resultBox.classList.remove("hidden");
   resultBox.scrollIntoView({ behavior: "smooth" });
+}
+function highlight(text, words) {
+  const box = document.getElementById("highlighted");
+  box.innerHTML = "";
+
+  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const parts = ["https?:\\/\\/\\S+", "www\\.\\S+", ...escaped];
+  const re = new RegExp("(" + parts.join("|") + ")", "gi");
+
+  text.split(re).forEach((piece, i) => {
+    if (!piece) return;
+    if (i % 2 === 1) {
+      const mark = document.createElement("mark");
+      mark.textContent = piece;
+      if (/^(https?:|www\.)/i.test(piece)) mark.className = "link";
+      box.appendChild(mark);
+    } else {
+      box.appendChild(document.createTextNode(piece));
+    }
+  });
 }

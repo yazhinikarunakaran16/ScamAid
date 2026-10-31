@@ -72,7 +72,14 @@ def analyze(msg: Message):
         raw = res.choices[0].message.content
         data = json.loads(re.search(r"\{.*\}", raw, re.S).group())
     except Exception as e:
-        data = {"verdict": "suspicious", "risk_score": 50,
-                "reason": "AI analysis failed", "advice": "Be careful."}
-    data["flags"] = flags
+        score = min(100, len(flags) * 20)
+        verdict = "scam" if score >= 60 else "suspicious" if score >= 20 else "safe"
+        data = {
+            "verdict": verdict,
+            "risk_score": score,
+            "reason": "Checked using ScamAid's built-in scam rules (AI check is not connected yet).",
+            "advice": "Do not click links or share OTP or bank details. Contact your bank directly using the number on your card."
+        }
+        data["flags"] = flags
+    data["matched"] = [f.split(": ", 1)[1] for f in flags if f.startswith("Suspicious word: ")]
     return data
