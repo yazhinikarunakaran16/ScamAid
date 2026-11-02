@@ -42,10 +42,10 @@ uvicorn app:app --reload
 🔗 **Live demo:** https://scamaid.onrender.com
 ## Screenshots
 
-### Light mode
-![Light mode 1](screenshots/light.png)
-![Light mode 2](screenshots/light2.png)
-
 ### Dark mode
-![Dark mode 1](screenshots/dark.png)
-![Dark mode 2](screenshots/dark2.png)
+![Home](screenshots/home.png)
+![Bank scam result](screenshots/bank-scam.png)
+![Safe message](screenshots/safe.png)
+
+### Light mode
+![Parcel scam result](screenshots/parcel-light.png)
