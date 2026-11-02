@@ -20,6 +20,13 @@
 
     <section class="card">
       <textarea id="message" rows="6" placeholder="Paste the SMS or message here..."></textarea>
+
+      <p class="privacy">
+        🔒 <b>Privacy:</b> Your message is sent to our server for analysis, and to an AI model when AI is connected. ScamAid does not save it.
+        <b>Do not paste real OTPs, PINs, passwords or card numbers.</b> Replace them with XXXX.<br>
+        <span class="privacy-ta">உங்கள் செய்தி பகுப்பாய்வுக்காக சர்வருக்கு (AI இணைக்கப்பட்டிருந்தால் AI மாடலுக்கும்) அனுப்பப்படும். உண்மையான OTP, PIN, கடவுச்சொல், கார்டு எண்களை ஒட்டாதீர்கள்; அவற்றுக்குப் பதிலாக XXXX என எழுதுங்கள்.</span>
+      </p>
+
       <div class="examples">
         <span>Try an example:</span>
         <button type="button" class="ex-btn" data-text="Dear customer, your SBI account will be blocked today. Update KYC now: http://sbi-kyc.xyz">Bank scam</button>
@@ -28,6 +35,7 @@
         <button type="button" class="ex-btn" data-text="Amma, I will reach home by 7 pm. Please keep dinner ready.">Normal message</button>
       </div>
       <button id="checkBtn">Check Message</button>
+      <p id="errorBox" class="error hidden"></p>
     </section>
 
     <section id="result" class="card result hidden">
@@ -38,6 +46,7 @@
         <button id="langBtn" type="button" class="lang-btn">தமிழில் பார்க்க</button>
       </div>
       <div class="meter"><div id="meterFill" class="meter-fill"></div></div>
+      <p id="scoreNote" class="note"></p>
 
       <h3 id="hBreak">How the score was calculated</h3>
       <ul id="breakdown" class="breakdown"></ul>

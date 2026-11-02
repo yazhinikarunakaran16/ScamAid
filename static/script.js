@@ -1,6 +1,7 @@
 const btn = document.getElementById("checkBtn");
 const input = document.getElementById("message");
 const resultBox = document.getElementById("result");
+const errorBox = document.getElementById("errorBox");
 const themeBtn = document.getElementById("themeBtn");
 const langBtn = document.getElementById("langBtn");
 const listenBtn = document.getElementById("listenBtn");
@@ -14,6 +15,7 @@ const LABELS = {
         btn: "தமிழில் பார்க்க", none: "No warning signs were added to the score.",
         noFlags: "No obvious warning signs found.", found: "Found",
         copy: "📋 Copy", copied: "✅ Copied",
+        scoreNote: "This is an estimate, not a guarantee. 0-39 low risk, 40-59 suspicious, 60+ likely scam. The score is built from the warning signs listed below.",
         note: "Before sharing, remove names, phone numbers, OTPs and account numbers. The copied text does not include your original message.",
         verdict: { safe: "safe", suspicious: "suspicious", scam: "scam" },
         ai: "AI + rules", rules: "Rule-based check" },
@@ -23,6 +25,7 @@ const LABELS = {
         btn: "View in English", none: "மதிப்பெண்ணில் எந்த எச்சரிக்கையும் சேர்க்கப்படவில்லை.",
         noFlags: "வெளிப்படையான எச்சரிக்கை அறிகுறிகள் இல்லை.", found: "கண்டறிந்தது",
         copy: "📋 நகலெடு", copied: "✅ நகலெடுக்கப்பட்டது",
+        scoreNote: "இது ஒரு மதிப்பீடு மட்டுமே, உத்தரவாதம் அல்ல. 0-39 குறைந்த ஆபத்து, 40-59 சந்தேகம், 60+ மோசடிக்கு வாய்ப்பு அதிகம். கீழே உள்ள எச்சரிக்கை அறிகுறிகளிலிருந்து மதிப்பெண் கணக்கிடப்படுகிறது.",
         note: "பகிரும் முன் பெயர்கள், தொலைபேசி எண்கள், OTP, கணக்கு எண்களை நீக்கவும். நகலெடுத்த உரையில் உங்கள் அசல் செய்தி இல்லை.",
         verdict: { safe: "பாதுகாப்பு", suspicious: "சந்தேகம்", scam: "மோசடி" },
         ai: "AI + விதிகள்", rules: "விதி அடிப்படையிலான சோதனை" }
@@ -51,26 +54,48 @@ document.querySelectorAll(".ex-btn").forEach(b => {
   b.addEventListener("click", () => { input.value = b.dataset.text; input.focus(); });
 });
 
+// ---------- Error state ----------
+function showError() {
+  errorBox.textContent = "Analysis temporarily unavailable. Please try again in a minute. / பகுப்பாய்வு தற்காலிகமாக கிடைக்கவில்லை. ஒரு நிமிடம் கழித்து மீண்டும் முயற்சிக்கவும்.";
+  errorBox.classList.remove("hidden");
+  resultBox.classList.add("hidden");
+}
+
 // ---------- Check ----------
 btn.addEventListener("click", async () => {
   const text = input.value.trim();
   if (!text) { alert("Please paste a message first."); return; }
+
+  errorBox.classList.add("hidden");
   btn.disabled = true;
   btn.textContent = "Checking...";
+  const slowTimer = setTimeout(() => {
+    btn.textContent = "Still working... server may be waking up";
+  }, 6000);
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), 60000);
+
   try {
     const res = await fetch("/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
+      signal: ctrl.signal
     });
-    lastData = await res.json();
+    if (!res.ok) throw new Error("Bad status " + res.status);
+    const data = await res.json();
+    if (!data || !data.verdict) throw new Error("Bad data");
+    lastData = data;
     lastText = text;
     render();
     resultBox.classList.remove("hidden");
     resultBox.scrollIntoView({ behavior: "smooth" });
   } catch (err) {
-    alert("Something went wrong. Is the server running?");
+    showError();
   }
+
+  clearTimeout(slowTimer);
+  clearTimeout(abortTimer);
   btn.disabled = false;
   btn.textContent = "Check Message";
 });
@@ -116,6 +141,7 @@ function render() {
   fill.style.width = "0";
   setTimeout(() => { fill.style.width = score + "%"; }, 50);
 
+  document.getElementById("scoreNote").textContent = L.scoreNote;
   document.getElementById("hBreak").textContent = L.brk;
   document.getElementById("hWhy").textContent = L.why;
   document.getElementById("hWarn").textContent = L.warn;

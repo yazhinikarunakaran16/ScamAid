@@ -24,6 +24,29 @@ class Message(BaseModel):
     text: str
 
 
+NOTES = {
+    "kyc": ("KYC request: Banks do not ask you to update KYC through a link in an SMS. Scammers say 'KYC update' to steal your login or card details.",
+            "KYC கோரிக்கை: வங்கிகள் SMS இணைப்பு மூலம் KYC புதுப்பிக்கச் சொல்வதில்லை. மோசடியாளர்கள் 'KYC' என்று கூறி உங்கள் லாகின் அல்லது கார்டு விவரங்களைத் திருடுகிறார்கள்."),
+    "otp": ("OTP request: An OTP is a key to your money. Never share it. Anyone who asks for it is trying to approve a payment from your account.",
+            "OTP கோரிக்கை: OTP என்பது உங்கள் பணத்தின் சாவி. யாரிடமும் பகிராதீர்கள். அதைக் கேட்பவர் உங்கள் கணக்கிலிருந்து பணம் எடுக்க முயல்கிறார்."),
+    "upi pin": ("UPI PIN request: You enter a UPI PIN only to send money, never to receive it or to 'verify'.",
+                "UPI PIN கோரிக்கை: UPI PIN பணம் அனுப்ப மட்டுமே. பெறுவதற்கோ 'சரிபார்ப்பதற்கோ' தேவையில்லை."),
+    "cvv": ("CVV request: Your card's CVV lets others pay online with your card. Never share it.",
+            "CVV கோரிக்கை: CVV இருந்தால் மற்றவர்கள் உங்கள் கார்டில் ஆன்லைனில் பணம் செலுத்த முடியும். பகிராதீர்கள்."),
+    "password": ("Password request: Real companies never ask for your password by message.",
+                 "கடவுச்சொல் கோரிக்கை: உண்மையான நிறுவனங்கள் செய்தியில் கடவுச்சொல் கேட்காது."),
+    "aadhaar": ("Aadhaar request: Aadhaar details can be misused for fake loans and SIM cards.",
+                "ஆதார் கோரிக்கை: ஆதார் விவரங்கள் போலிக் கடன், சிம் கார்டுகளுக்குத் தவறாகப் பயன்படுத்தப்படலாம்."),
+    "pan card": ("PAN request: PAN details can be misused for fake loans and fraud.",
+                 "PAN கோரிக்கை: PAN விவரங்கள் போலிக் கடன், மோசடிக்குத் தவறாகப் பயன்படுத்தப்படலாம்."),
+    "card number": ("Card number request: Banks never ask for your full card number by message.",
+                    "கார்டு எண் கோரிக்கை: வங்கிகள் செய்தியில் முழு கார்டு எண்ணைக் கேட்காது."),
+    "verify now": ("'Verify now' pressure: Scammers push you to verify through a link so you enter your details on a fake page.",
+                   "'இப்போதே சரிபார்' அழுத்தம்: போலி பக்கத்தில் விவரங்களை உள்ளிட வைக்க இணைப்பு மூலம் சரிபார்க்கச் சொல்கிறார்கள்."),
+    "update now": ("'Update now' pressure: Scammers push you to update details through a link so you enter them on a fake page.",
+                   "'இப்போதே புதுப்பி' அழுத்தம்: போலி பக்கத்தில் விவரங்களை உள்ளிட வைக்க இணைப்பு மூலம் புதுப்பிக்கச் சொல்கிறார்கள்."),
+}
+
 RULES = [
     {"key": "urgency", "title": "Pressure to act fast", "weight": 25,
      "title_ta": "உடனே செயல்பட அழுத்தம்",
@@ -132,8 +155,13 @@ def analyze_rules(text):
         if found:
             score += r["weight"]
             matched += found
+            explain, explain_ta = r["explain"], r["explain_ta"]
+            used = [NOTES[w] for w in found if w in NOTES][:2]
+            if used:
+                explain = " ".join(n[0] for n in used)
+                explain_ta = " ".join(n[1] for n in used)
             findings.append({"key": r["key"], "title": r["title"], "title_ta": r["title_ta"],
-                             "explain": r["explain"], "explain_ta": r["explain_ta"], "found": found})
+                             "explain": explain, "explain_ta": explain_ta, "found": found})
             breakdown.append({"label": r["title"], "label_ta": r["title_ta"], "points": r["weight"]})
 
     links = re.findall(r"(?:https?://|www\.)\S+", low)
