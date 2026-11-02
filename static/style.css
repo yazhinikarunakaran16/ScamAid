@@ -172,3 +172,12 @@ footer { text-align: center; padding: 24px; color: var(--muted); font-size: 14px
 }
 [data-theme="dark"] .highlighted mark { background: #7f1d1d; color: #fecaca; }
 [data-theme="dark"] .highlighted mark.link { background: #78350f; color: #fde68a; }
+.lang-btn { margin-left: auto; }
+.mode { font-size: 13px; color: var(--muted); }
+.lang-btn { width: auto; margin: 0 0 0 auto; padding: 6px 12px; font-size: 14px; background: var(--chip-bg); color: var(--chip-text); border-radius: 999px; }
+.msg-box { background: var(--bg); padding: 10px; border-radius: 8px; word-break: break-word; }
+mark { background: #fde68a; color: #1f2937; padding: 0 2px; border-radius: 3px; }
+.finding { background: var(--flag-bg); color: var(--flag-text); padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+.finding p { font-size: 14px; margin-top: 2px; }
+.listen-btn { width: auto; margin-top: 14px; padding: 8px 16px; font-size: 15px; background: var(--chip-bg); color: var(--chip-text); border-radius: 999px; }
+.listen-btn:hover { background: var(--chip-hover); }

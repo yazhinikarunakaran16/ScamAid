@@ -15,19 +15,17 @@
   <main>
     <section class="hero">
       <h1>Got a suspicious message?</h1>
-      <p>Paste it below. ScamAid shows what looks suspicious and what to do safely.</p>
+      <p>Paste it below and ScamAid will tell you if it is a scam in seconds.</p>
     </section>
 
     <section class="card">
       <textarea id="message" rows="6" placeholder="Paste the SMS or message here..."></textarea>
-
       <div class="examples">
         <span>Try an example:</span>
         <button type="button" class="ex-btn" data-text="Dear customer, your SBI account will be blocked today. Update KYC now: http://sbi-kyc.xyz">Bank scam</button>
         <button type="button" class="ex-btn" data-text="Your parcel is held at customs. Pay Rs 50 immediately: www.track-parcel.top">Parcel scam</button>
         <button type="button" class="ex-btn" data-text="Amma, I will reach home by 7 pm. Please keep dinner ready.">Normal message</button>
       </div>
-
       <button id="checkBtn">Check Message</button>
     </section>
 
@@ -35,36 +33,36 @@
       <div class="verdict-row">
         <span id="verdict" class="badge"></span>
         <span id="scoreText"></span>
+        <span id="modeText" class="mode"></span>
+        <button id="langBtn" type="button" class="lang-btn">தமிழில் பார்க்க</button>
       </div>
       <div class="meter"><div id="meterFill" class="meter-fill"></div></div>
 
-      <h3>Your message</h3>
-      <div id="highlighted" class="highlighted"></div>
+      <h3 id="hMessage">Your message</h3>
+      <p id="highlighted" class="msg-box"></p>
 
-      <h3>Warning signs</h3>
-      <div id="findings" class="findings"></div>
-
-      <h3>Summary</h3>
+      <h3 id="hWhy">Why?</h3>
       <p id="reason"></p>
 
-      <h3>What should you do?</h3>
-      <p id="advice"></p>
+      <h3 id="hWarn">Warning signs</h3>
+      <div id="findings"></div>
 
-      <p class="note">This is an estimate, not proof. If unsure, contact the company through its official app, website or the number on your card.</p>
+      <h3 id="hAdvice">What should you do?</h3>
+      <p id="advice"></p>
+      <button id="listenBtn" type="button" class="listen-btn">🔊 Listen / கேளுங்கள்</button>
     </section>
 
     <section class="how">
       <h2>How it works</h2>
       <div class="steps">
         <div class="step"><b>1. Paste</b><p>Copy the message you received.</p></div>
-        <div class="step"><b>2. Analyze</b><p>Rule-based checks look for common scam warning signs.</p></div>
-        <div class="step"><b>3. Stay safe</b><p>Get the reasons and a safe next step.</p></div>
+        <div class="step"><b>2. Analyze</b><p>AI and rule checks look for scam patterns.</p></div>
+        <div class="step"><b>3. Stay safe</b><p>Get a risk score and clear advice.</p></div>
       </div>
     </section>
   </main>
 
   <footer>ScamAid · Built for the Meta Global AI Developer Hackathon</footer>
-
   <script src="/static/script.js"></script>
 </body>
 </html>

@@ -2,8 +2,21 @@ const btn = document.getElementById("checkBtn");
 const input = document.getElementById("message");
 const resultBox = document.getElementById("result");
 const themeBtn = document.getElementById("themeBtn");
+const langBtn = document.getElementById("langBtn");
 
 const COLORS = { safe: "#16a34a", suspicious: "#f59e0b", scam: "#dc2626" };
+const LABELS = {
+  en: { msg: "Your message", why: "Why?", warn: "Warning signs", advice: "What should you do?",
+        risk: "Risk score", btn: "தமிழில் பார்க்க", none: "No obvious warning signs found.",
+        verdict: { safe: "safe", suspicious: "suspicious", scam: "scam" }, ai: "AI + rules", rules: "Rules" },
+  ta: { msg: "உங்கள் செய்தி", why: "ஏன்?", warn: "எச்சரிக்கை அறிகுறிகள்", advice: "நீங்கள் என்ன செய்ய வேண்டும்?",
+        risk: "ஆபத்து மதிப்பெண்", btn: "View in English", none: "வெளிப்படையான எச்சரிக்கை அறிகுறிகள் இல்லை.",
+        verdict: { safe: "பாதுகாப்பு", suspicious: "சந்தேகம்", scam: "மோசடி" }, ai: "AI + விதிகள்", rules: "விதிகள்" }
+};
+
+let lang = "en";
+let lastData = null;
+let lastText = "";
 
 // ---------- Theme ----------
 function applyTheme(t) {
@@ -13,29 +26,21 @@ function applyTheme(t) {
 let savedTheme = null;
 try { savedTheme = localStorage.getItem("theme"); } catch (e) {}
 applyTheme(savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-if (themeBtn) {
-  themeBtn.addEventListener("click", () => {
-    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(next);
-    try { localStorage.setItem("theme", next); } catch (e) {}
-  });
-}
-
-// ---------- Example buttons ----------
-document.querySelectorAll(".ex-btn").forEach(b => {
-  b.addEventListener("click", () => {
-    input.value = b.dataset.text;
-    input.focus();
-  });
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem("theme", next); } catch (e) {}
 });
 
-// ---------- Check message ----------
+// ---------- Examples ----------
+document.querySelectorAll(".ex-btn").forEach(b => {
+  b.addEventListener("click", () => { input.value = b.dataset.text; input.focus(); });
+});
+
+// ---------- Check ----------
 btn.addEventListener("click", async () => {
   const text = input.value.trim();
-  if (!text) {
-    alert("Please paste a message first.");
-    return;
-  }
+  if (!text) { alert("Please paste a message first."); return; }
   btn.disabled = true;
   btn.textContent = "Checking...";
   try {
@@ -44,82 +49,128 @@ btn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text })
     });
-    const data = await res.json();
-    showResult(data);
+    lastData = await res.json();
+    lastText = text;
+    render();
+    resultBox.classList.remove("hidden");
+    resultBox.scrollIntoView({ behavior: "smooth" });
   } catch (err) {
-    alert("Error: " + err.message);
+    alert("Something went wrong. Is the server running?");
   }
   btn.disabled = false;
   btn.textContent = "Check Message";
 });
 
-function showResult(data) {
-  const verdict = (data.verdict || "suspicious").toLowerCase();
-  const score = Number(data.risk_score) || 0;
+langBtn.addEventListener("click", () => {
+  lang = lang === "en" ? "ta" : "en";
+  if (lastData) render();
+});
+
+// ---------- Render ----------
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function highlight(text, words) {
+  let html = esc(text);
+  const list = [...new Set(words)].filter(Boolean).sort((a, b) => b.length - a.length);
+  list.forEach(w => {
+    const safe = esc(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    html = html.replace(new RegExp(safe, "gi"), m => "<mark>" + m + "</mark>");
+  });
+  return html;
+}
+
+function render() {
+  const d = lastData;
+  const L = LABELS[lang];
+  const ta = lang === "ta";
+  const verdict = (d.verdict || "suspicious").toLowerCase();
+  const score = Number(d.risk_score) || 0;
 
   const badge = document.getElementById("verdict");
-  badge.textContent = verdict;
+  badge.textContent = L.verdict[verdict] || verdict;
   badge.className = "badge " + verdict;
-
-  const label = data.mode === "ai" ? "Risk score (AI-assisted)" : "Risk score (rule-based estimate)";
-  document.getElementById("scoreText").textContent = label + ": " + score + "/100";
+  document.getElementById("scoreText").textContent = L.risk + ": " + score + "/100";
+  document.getElementById("modeText").textContent = d.mode === "ai" ? L.ai : L.rules;
+  langBtn.textContent = L.btn;
 
   const fill = document.getElementById("meterFill");
   fill.style.background = COLORS[verdict] || COLORS.suspicious;
   fill.style.width = "0";
   setTimeout(() => { fill.style.width = score + "%"; }, 50);
 
-  document.getElementById("reason").textContent = data.reason || "";
-  document.getElementById("advice").textContent = data.advice || "";
+  document.getElementById("hMessage").textContent = L.msg;
+  document.getElementById("hWhy").textContent = L.why;
+  document.getElementById("hWarn").textContent = L.warn;
+  document.getElementById("hAdvice").textContent = L.advice;
 
-  highlight(input.value, data.matched || []);
+  const found = [];
+  (d.findings || []).forEach(f => (f.found || []).forEach(w => found.push(w)));
+  document.getElementById("highlighted").innerHTML = highlight(lastText, found);
+
+  document.getElementById("reason").textContent = (ta ? d.reason_ta : d.reason) || "";
+  document.getElementById("advice").textContent = (ta ? d.advice_ta : d.advice) || "";
 
   const box = document.getElementById("findings");
   box.innerHTML = "";
-  if (data.findings && data.findings.length) {
-    data.findings.forEach(f => {
-      const item = document.createElement("div");
-      item.className = "finding";
+  if (d.findings && d.findings.length) {
+    d.findings.forEach(f => {
+      const div = document.createElement("div");
+      div.className = "finding";
       const t = document.createElement("b");
-      t.textContent = f.title;
+      t.textContent = ta ? f.title_ta : f.title;
       const p = document.createElement("p");
-      p.textContent = f.explain;
-      item.appendChild(t);
-      item.appendChild(p);
-      if (f.found && f.found.length) {
-        const s = document.createElement("span");
-        s.className = "found";
-        s.textContent = "Found: " + f.found.join(", ");
-        item.appendChild(s);
-      }
-      box.appendChild(item);
+      p.textContent = ta ? f.explain_ta : f.explain;
+      div.appendChild(t);
+      div.appendChild(p);
+      box.appendChild(div);
     });
   } else {
-    const n = document.createElement("span");
-    n.className = "no-flags";
-    n.textContent = "No common scam warning signs found.";
-    box.appendChild(n);
+    const p = document.createElement("span");
+    p.className = "no-flags";
+    p.textContent = L.none;
+    box.appendChild(p);
   }
+}
+// ---------- Voice: read result aloud ----------
+const listenBtn = document.getElementById("listenBtn");
 
-  resultBox.classList.remove("hidden");
-  resultBox.scrollIntoView({ behavior: "smooth" });
+function hasVoice(prefix) {
+  return window.speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith(prefix));
 }
 
-function highlight(text, words) {
-  const box = document.getElementById("highlighted");
-  box.innerHTML = "";
-  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const parts = ["https?:\\/\\/\\S+", "www\\.\\S+", ...escaped];
-  const re = new RegExp("(" + parts.join("|") + ")", "gi");
-  text.split(re).forEach((piece, i) => {
-    if (!piece) return;
-    if (i % 2 === 1) {
-      const mark = document.createElement("mark");
-      mark.textContent = piece;
-      if (/^(https?:|www\.)/i.test(piece)) mark.className = "link";
-      box.appendChild(mark);
-    } else {
-      box.appendChild(document.createTextNode(piece));
-    }
-  });
+listenBtn.addEventListener("click", () => {
+  if (!("speechSynthesis" in window)) {
+    alert("Your browser does not support voice.");
+    return;
+  }
+  const synth = window.speechSynthesis;
+  if (synth.speaking) {
+    synth.cancel();
+    return;
+  }
+  if (!lastData) {
+    alert("Please check a message first.");
+    return;
+  }
+
+  const ta = lang === "ta";
+  const L = LABELS[lang];
+  const verdict = (lastData.verdict || "suspicious").toLowerCase();
+  const reason = (ta ? lastData.reason_ta : lastData.reason) || "";
+  const advice = (ta ? lastData.advice_ta : lastData.advice) || "";
+  const text = L.verdict[verdict] + ". " + L.risk + " " + (Number(lastData.risk_score) || 0) + ". " + reason + " " + advice;
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = ta ? "ta-IN" : "en-IN";
+  u.rate = 0.9;
+  if (ta && !hasVoice("ta")) {
+    alert("This device has no Tamil voice installed, so it may not speak Tamil. Try on your phone, or use English.");
+  }
+  synth.speak(u);
+});
+
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.getVoices();
 }
