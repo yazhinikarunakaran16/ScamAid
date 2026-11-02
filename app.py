@@ -16,7 +16,7 @@ API_KEY = os.getenv("LLM_API_KEY") or ""
 BASE_URL = os.getenv("LLM_BASE_URL") or "https://api.meta.ai/v1"
 MODEL = os.getenv("LLM_MODEL") or "muse-spark-1.1"
 AI_ENABLED = bool(API_KEY) and API_KEY != "dummy"
-client = OpenAI(api_key=API_KEY or "dummy", base_url=BASE_URL)
+client = OpenAI(api_key=API_KEY or "dummy", base_url=BASE_URL, timeout=25, max_retries=0)
 
 
 class Message(BaseModel):
@@ -87,13 +87,12 @@ def analyze_rules(text):
         score += weight
         findings.append({"title": "Suspicious link", "explain": explain,
                          "found": [l.rstrip(".,)") for l in links]})
-            if re.search(r"(do not|don't|never) share", low) and not links:
-        score = max(0, score - 20)
 
     if re.search(r"(do not|don't|never) share", low) and not links:
         score = max(0, score - 20)
-          score = min(100, score)
-    verdict = "scam"  if score >= 60 else "suspicious" if score >= 25 else "safe"
+
+    score = min(100, score)
+    verdict = "scam" if score >= 60 else "suspicious" if score >= 25 else "safe"
 
     if findings:
         reason = "Flagged for: " + ", ".join(f["title"].lower() for f in findings) + "."
