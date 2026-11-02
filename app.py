@@ -190,7 +190,7 @@ def analyze_rules(text):
                               "points": -delta})
 
     score = min(100, score)
-    verdict = "scam" if score >= 60 else "suspicious" if score >= 40 else "safe"
+    verdict = "scam" if score >= 60 else "suspicious" if score >= 25 else "safe"
     keys = {f["key"] for f in findings}
 
     if verdict == "safe" and findings:
