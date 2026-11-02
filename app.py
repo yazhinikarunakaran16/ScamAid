@@ -40,9 +40,10 @@ RULES = [
      "explain": "Unexpected prizes, refunds or easy money are common bait.",
      "words": ["winner", "prize", "lottery", "congratulations", "cashback", "refund",
                "loan approved", "double your money", "பரிசு", "லாட்டரி"]},
-    {"title": "Suspicious job or investment offer", "weight": 20,
+    {"title": "Suspicious job or investment offer", "weight": 30,
      "explain": "Easy daily earnings and work-from-home offers are a common scam.",
-     "words": ["work from home", "part time job", "earn daily", "investment"]},
+     "words": ["work from home", "part time job", "part time work", "earn daily",
+               "whatsapp group", "per day", "investment"]},
     {"title": "Fake delivery or customs notice", "weight": 20,
      "explain": "Scammers pretend a parcel is stuck and ask for a small payment.",
      "words": ["parcel", "customs", "courier"]},
@@ -86,9 +87,13 @@ def analyze_rules(text):
         score += weight
         findings.append({"title": "Suspicious link", "explain": explain,
                          "found": [l.rstrip(".,)") for l in links]})
+            if re.search(r"(do not|don't|never) share", low) and not links:
+        score = max(0, score - 20)
 
-    score = min(100, score)
-    verdict = "scam" if score >= 60 else "suspicious" if score >= 25 else "safe"
+    if re.search(r"(do not|don't|never) share", low) and not links:
+        score = max(0, score - 20)
+          score = min(100, score)
+    verdict = "scam"  if score >= 60 else "suspicious" if score >= 25 else "safe"
 
     if findings:
         reason = "Flagged for: " + ", ".join(f["title"].lower() for f in findings) + "."
