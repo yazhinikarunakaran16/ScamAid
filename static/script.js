@@ -174,3 +174,24 @@ listenBtn.addEventListener("click", () => {
 if ("speechSynthesis" in window) {
   window.speechSynthesis.getVoices();
 }
+// ---------- Copy result ----------
+const copyBtn = document.getElementById("copyBtn");
+const reportLink = document.getElementById("reportLink");
+
+copyBtn.addEventListener("click", async () => {
+  if (!lastData) return;
+  const ta = lang === "ta";
+  const L = LABELS[lang];
+  const verdict = (lastData.verdict || "suspicious").toLowerCase();
+  const reason = (ta ? lastData.reason_ta : lastData.reason) || "";
+  const advice = (ta ? lastData.advice_ta : lastData.advice) || "";
+  const text = "ScamAid: " + L.verdict[verdict] + " (" + L.risk + ": " + (Number(lastData.risk_score) || 0) + "/100)\n\n" +
+    reason + "\n\n" + advice + "\n\nhttps://scamaid.onrender.com";
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = ta ? "✅ நகலெடுக்கப்பட்டது" : "✅ Copied";
+  } catch (e) {
+    alert("Could not copy. Please select the text and copy it manually.");
+  }
+  setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 2000);
+});
