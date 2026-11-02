@@ -3,15 +3,29 @@ const input = document.getElementById("message");
 const resultBox = document.getElementById("result");
 const themeBtn = document.getElementById("themeBtn");
 const langBtn = document.getElementById("langBtn");
+const listenBtn = document.getElementById("listenBtn");
+const copyBtn = document.getElementById("copyBtn");
 
 const COLORS = { safe: "#16a34a", suspicious: "#f59e0b", scam: "#dc2626" };
 const LABELS = {
-  en: { msg: "Your message", why: "Why?", warn: "Warning signs", advice: "What should you do?",
-        risk: "Risk score", btn: "தமிழில் பார்க்க", none: "No obvious warning signs found.",
-        verdict: { safe: "safe", suspicious: "suspicious", scam: "scam" }, ai: "AI + rules", rules: "Rules" },
-  ta: { msg: "உங்கள் செய்தி", why: "ஏன்?", warn: "எச்சரிக்கை அறிகுறிகள்", advice: "நீங்கள் என்ன செய்ய வேண்டும்?",
-        risk: "ஆபத்து மதிப்பெண்", btn: "View in English", none: "வெளிப்படையான எச்சரிக்கை அறிகுறிகள் இல்லை.",
-        verdict: { safe: "பாதுகாப்பு", suspicious: "சந்தேகம்", scam: "மோசடி" }, ai: "AI + விதிகள்", rules: "விதிகள்" }
+  en: { msg: "Your message (warning words highlighted)", why: "Why?", warn: "Warning signs",
+        advice: "What should you do?", brk: "How the score was calculated",
+        risk: "Risk score", riskEst: "Risk estimate", total: "Total",
+        btn: "தமிழில் பார்க்க", none: "No warning signs were added to the score.",
+        noFlags: "No obvious warning signs found.", found: "Found",
+        copy: "📋 Copy", copied: "✅ Copied",
+        note: "Before sharing, remove names, phone numbers, OTPs and account numbers. The copied text does not include your original message.",
+        verdict: { safe: "safe", suspicious: "suspicious", scam: "scam" },
+        ai: "AI + rules", rules: "Rule-based check" },
+  ta: { msg: "உங்கள் செய்தி (எச்சரிக்கை சொற்கள் குறிக்கப்பட்டுள்ளன)", why: "ஏன்?", warn: "எச்சரிக்கை அறிகுறிகள்",
+        advice: "நீங்கள் என்ன செய்ய வேண்டும்?", brk: "மதிப்பெண் எப்படி வந்தது",
+        risk: "ஆபத்து மதிப்பெண்", riskEst: "ஆபத்து மதிப்பீடு", total: "மொத்தம்",
+        btn: "View in English", none: "மதிப்பெண்ணில் எந்த எச்சரிக்கையும் சேர்க்கப்படவில்லை.",
+        noFlags: "வெளிப்படையான எச்சரிக்கை அறிகுறிகள் இல்லை.", found: "கண்டறிந்தது",
+        copy: "📋 நகலெடு", copied: "✅ நகலெடுக்கப்பட்டது",
+        note: "பகிரும் முன் பெயர்கள், தொலைபேசி எண்கள், OTP, கணக்கு எண்களை நீக்கவும். நகலெடுத்த உரையில் உங்கள் அசல் செய்தி இல்லை.",
+        verdict: { safe: "பாதுகாப்பு", suspicious: "சந்தேகம்", scam: "மோசடி" },
+        ai: "AI + விதிகள்", rules: "விதி அடிப்படையிலான சோதனை" }
 };
 
 let lang = "en";
@@ -87,35 +101,68 @@ function render() {
   const ta = lang === "ta";
   const verdict = (d.verdict || "suspicious").toLowerCase();
   const score = Number(d.risk_score) || 0;
+  const isAI = d.mode === "ai";
 
   const badge = document.getElementById("verdict");
   badge.textContent = L.verdict[verdict] || verdict;
   badge.className = "badge " + verdict;
-  document.getElementById("scoreText").textContent = L.risk + ": " + score + "/100";
-  document.getElementById("modeText").textContent = d.mode === "ai" ? L.ai : L.rules;
+  document.getElementById("scoreText").textContent = (isAI ? L.risk : L.riskEst) + ": " + score + "/100";
+  document.getElementById("modeText").textContent = isAI ? L.ai : L.rules;
   langBtn.textContent = L.btn;
+  copyBtn.textContent = L.copy;
 
   const fill = document.getElementById("meterFill");
   fill.style.background = COLORS[verdict] || COLORS.suspicious;
   fill.style.width = "0";
   setTimeout(() => { fill.style.width = score + "%"; }, 50);
 
-  document.getElementById("hMessage").textContent = L.msg;
+  document.getElementById("hBreak").textContent = L.brk;
   document.getElementById("hWhy").textContent = L.why;
   document.getElementById("hWarn").textContent = L.warn;
   document.getElementById("hAdvice").textContent = L.advice;
+  document.getElementById("hMessage").textContent = L.msg;
+  document.getElementById("privacyNote").textContent = L.note;
 
-  const found = [];
-  (d.findings || []).forEach(f => (f.found || []).forEach(w => found.push(w)));
-  document.getElementById("highlighted").innerHTML = highlight(lastText, found);
+  // Score breakdown
+  const ul = document.getElementById("breakdown");
+  ul.innerHTML = "";
+  const items = d.breakdown || [];
+  if (items.length) {
+    items.forEach(b => {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = ta ? b.label_ta : b.label;
+      const pts = document.createElement("b");
+      pts.textContent = (b.points > 0 ? "+" : "") + b.points;
+      li.appendChild(name);
+      li.appendChild(pts);
+      ul.appendChild(li);
+    });
+    const tot = document.createElement("li");
+    tot.className = "total";
+    const tn = document.createElement("span");
+    tn.textContent = L.total;
+    const tp = document.createElement("b");
+    tp.textContent = "= " + score + " / 100";
+    tot.appendChild(tn);
+    tot.appendChild(tp);
+    ul.appendChild(tot);
+  } else {
+    const li = document.createElement("li");
+    li.textContent = L.none;
+    ul.appendChild(li);
+  }
 
   document.getElementById("reason").textContent = (ta ? d.reason_ta : d.reason) || "";
   document.getElementById("advice").textContent = (ta ? d.advice_ta : d.advice) || "";
 
+  // Warning signs with explanation + found words
   const box = document.getElementById("findings");
   box.innerHTML = "";
+  const found = [];
   if (d.findings && d.findings.length) {
     d.findings.forEach(f => {
+      (f.found || []).forEach(w => found.push(w));
       const div = document.createElement("div");
       div.className = "finding";
       const t = document.createElement("b");
@@ -124,36 +171,34 @@ function render() {
       p.textContent = ta ? f.explain_ta : f.explain;
       div.appendChild(t);
       div.appendChild(p);
+      if (f.found && f.found.length) {
+        const c = document.createElement("p");
+        c.className = "found";
+        c.textContent = L.found + ": " + f.found.join(", ");
+        div.appendChild(c);
+      }
       box.appendChild(div);
     });
   } else {
     const p = document.createElement("span");
     p.className = "no-flags";
-    p.textContent = L.none;
+    p.textContent = L.noFlags;
     box.appendChild(p);
   }
-}
-// ---------- Voice: read result aloud ----------
-const listenBtn = document.getElementById("listenBtn");
 
+  document.getElementById("highlighted").innerHTML = highlight(lastText, found);
+}
+
+// ---------- Voice: read result aloud ----------
 function hasVoice(prefix) {
   return window.speechSynthesis.getVoices().some(v => v.lang.toLowerCase().startsWith(prefix));
 }
 
 listenBtn.addEventListener("click", () => {
-  if (!("speechSynthesis" in window)) {
-    alert("Your browser does not support voice.");
-    return;
-  }
+  if (!("speechSynthesis" in window)) { alert("Your browser does not support voice."); return; }
   const synth = window.speechSynthesis;
-  if (synth.speaking) {
-    synth.cancel();
-    return;
-  }
-  if (!lastData) {
-    alert("Please check a message first.");
-    return;
-  }
+  if (synth.speaking) { synth.cancel(); return; }
+  if (!lastData) { alert("Please check a message first."); return; }
 
   const ta = lang === "ta";
   const L = LABELS[lang];
@@ -166,18 +211,13 @@ listenBtn.addEventListener("click", () => {
   u.lang = ta ? "ta-IN" : "en-IN";
   u.rate = 0.9;
   if (ta && !hasVoice("ta")) {
-    alert("This device has no Tamil voice installed, so it may not speak Tamil. Try on your phone, or use English.");
+    alert("This device has no Tamil voice installed, so it may not speak Tamil.");
   }
   synth.speak(u);
 });
+if ("speechSynthesis" in window) { window.speechSynthesis.getVoices(); }
 
-if ("speechSynthesis" in window) {
-  window.speechSynthesis.getVoices();
-}
-// ---------- Copy result ----------
-const copyBtn = document.getElementById("copyBtn");
-const reportLink = document.getElementById("reportLink");
-
+// ---------- Copy result (no original message, no personal details) ----------
 copyBtn.addEventListener("click", async () => {
   if (!lastData) return;
   const ta = lang === "ta";
@@ -185,13 +225,14 @@ copyBtn.addEventListener("click", async () => {
   const verdict = (lastData.verdict || "suspicious").toLowerCase();
   const reason = (ta ? lastData.reason_ta : lastData.reason) || "";
   const advice = (ta ? lastData.advice_ta : lastData.advice) || "";
-  const text = "ScamAid: " + L.verdict[verdict] + " (" + L.risk + ": " + (Number(lastData.risk_score) || 0) + "/100)\n\n" +
+  const label = lastData.mode === "ai" ? L.risk : L.riskEst;
+  const text = "ScamAid: " + L.verdict[verdict] + " (" + label + ": " + (Number(lastData.risk_score) || 0) + "/100)\n\n" +
     reason + "\n\n" + advice + "\n\nhttps://scamaid.onrender.com";
   try {
     await navigator.clipboard.writeText(text);
-    copyBtn.textContent = ta ? "✅ நகலெடுக்கப்பட்டது" : "✅ Copied";
+    copyBtn.textContent = L.copied;
   } catch (e) {
     alert("Could not copy. Please select the text and copy it manually.");
   }
-  setTimeout(() => { copyBtn.textContent = "📋 Copy"; }, 2000);
+  setTimeout(() => { copyBtn.textContent = L.copy; }, 2000);
 });

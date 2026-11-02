@@ -12,6 +12,7 @@ app = FastAPI(title="ScamAid")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# API key stays on the server only. It is never sent to the browser.
 API_KEY = os.getenv("LLM_API_KEY") or ""
 BASE_URL = os.getenv("LLM_BASE_URL") or "https://api.meta.ai/v1"
 MODEL = os.getenv("LLM_MODEL") or "muse-spark-1.1"
@@ -24,63 +25,57 @@ class Message(BaseModel):
 
 
 RULES = [
-    {"title": "Pressure to act fast", "weight": 25,
+    {"key": "urgency", "title": "Pressure to act fast", "weight": 25,
      "title_ta": "உடனே செயல்பட அழுத்தம்",
-     "explain": "Scammers create panic so you act before you think.",
-     "explain_ta": "நீங்கள் யோசிப்பதற்குள் செயல்பட வைக்க மோசடியாளர்கள் பயத்தை உருவாக்குகிறார்கள்.",
+     "explain": "Scammers create pressure so you act before you think.",
+     "explain_ta": "நீங்கள் யோசிப்பதற்குள் செயல்பட வைக்க மோசடியாளர்கள் அழுத்தம் உருவாக்குகிறார்கள்.",
      "words": ["urgent", "immediately", "within 24 hours", "last chance",
                "final notice", "expire", "expires", "உடனே"]},
-    {"title": "Asks for private or bank details", "weight": 30,
+    {"key": "private", "title": "Asks for private or bank details", "weight": 30,
      "title_ta": "தனிப்பட்ட அல்லது வங்கி விவரங்களைக் கேட்கிறது",
-     "explain": "Real banks never ask for OTP, PIN, CVV or passwords by SMS or call.",
-     "explain_ta": "உண்மையான வங்கிகள் OTP, PIN, CVV அல்லது கடவுச்சொல்லை SMS அல்லது அழைப்பில் ஒருபோதும் கேட்காது.",
+     "explain": "Asks for KYC, OTP or bank details. Real banks never ask for these by SMS or call.",
+     "explain_ta": "KYC, OTP அல்லது வங்கி விவரங்களைக் கேட்கிறது. உண்மையான வங்கிகள் இவற்றை SMS அல்லது அழைப்பில் கேட்காது.",
      "words": ["otp", "kyc", "pan card", "aadhaar", "upi pin", "cvv", "password",
                "card number", "verify now", "update now"]},
-    {"title": "Threat of block or legal action", "weight": 25,
+    {"key": "threat", "title": "Threat of block or legal action", "weight": 25,
      "title_ta": "கணக்கு முடக்கம் அல்லது சட்ட நடவடிக்கை மிரட்டல்",
-     "explain": "Threats about blocked accounts or arrest are used to scare people.",
-     "explain_ta": "கணக்கு முடக்கம் அல்லது கைது பற்றிய மிரட்டல்கள் மக்களை பயமுறுத்த பயன்படுத்தப்படுகின்றன.",
+     "explain": "Threats like 'your account will be blocked today' are used to create panic.",
+     "explain_ta": "'இன்றே உங்கள் கணக்கு முடக்கப்படும்' போன்ற மிரட்டல்கள் பயத்தை உருவாக்கப் பயன்படுகின்றன.",
      "words": ["blocked", "suspended", "account will be", "legal action", "arrest",
                "police", "sim card", "disconnected", "முடக்கம்"]},
-    {"title": "Too-good-to-be-true reward", "weight": 25,
+    {"key": "reward", "title": "Too-good-to-be-true reward", "weight": 25,
      "title_ta": "நம்ப முடியாத பரிசு அல்லது வெகுமதி",
      "explain": "Unexpected prizes, refunds or easy money are common bait.",
      "explain_ta": "எதிர்பாராத பரிசு, பணத்திருப்பம் அல்லது எளிதான பணம் ஆகியவை பொதுவான தூண்டில்கள்.",
      "words": ["winner", "prize", "lottery", "congratulations", "cashback", "refund",
                "loan approved", "double your money", "பரிசு", "லாட்டரி"]},
-    {"title": "Suspicious job or investment offer", "weight": 30,
+    {"key": "job", "title": "Suspicious job or investment offer", "weight": 30,
      "title_ta": "சந்தேகத்திற்குரிய வேலை அல்லது முதலீட்டு வாய்ப்பு",
      "explain": "Easy daily earnings and work-from-home offers are a common scam.",
      "explain_ta": "தினமும் எளிதாக சம்பாதிக்கலாம், வீட்டிலிருந்தே வேலை போன்ற வாய்ப்புகள் பொதுவான மோசடி.",
      "words": ["work from home", "part time job", "part time work", "earn daily",
                "whatsapp group", "per day", "investment"]},
-    {"title": "Fake delivery or customs notice", "weight": 20,
+    {"key": "parcel", "title": "Fake delivery or customs notice", "weight": 20,
      "title_ta": "போலி டெலிவரி அல்லது சுங்க அறிவிப்பு",
      "explain": "Scammers pretend a parcel is stuck and ask for a small payment.",
      "explain_ta": "பார்சல் சிக்கிக்கொண்டது என்று கூறி சிறிய தொகை செலுத்தச் சொல்வது மோசடியாளர்களின் வழக்கம்.",
      "words": ["parcel", "customs", "courier"]},
 ]
 
+BRANDS = {
+    "sbi": ("SBI", "YONO SBI app"),
+    "hdfc": ("HDFC Bank", "HDFC Bank app"),
+    "icici": ("ICICI Bank", "iMobile app"),
+    "axis": ("Axis Bank", "Axis Mobile app"),
+    "paytm": ("Paytm", "Paytm app"),
+    "phonepe": ("PhonePe", "PhonePe app"),
+}
+
 SHORTENERS = r"bit\.ly|tinyurl\.com|cutt\.ly|rb\.gy|t\.co|is\.gd"
 ODD_TLDS = r"\.(xyz|top|click|buzz|icu|vip|work|loan|monster)(?![a-z])"
 
-ADVICE_EN = {
-    "scam": ("Do not click the link or reply. Never share OTP, PIN or card details. "
-             "Open your bank's official app or website, or call the number printed on your card. "
-             "You can report it at cybercrime.gov.in or call 1930."),
-    "suspicious": ("Do not click any link yet. Check with the company using its official app, "
-                   "website or the number on your card."),
-    "safe": "No common warning signs found, but never share your OTP or PIN with anyone.",
-}
-
-ADVICE_TA = {
-    "scam": ("இணைப்பைத் தொடாதீர்கள், பதிலும் அனுப்பாதீர்கள். OTP, PIN அல்லது கார்டு விவரங்களை யாரிடமும் பகிராதீர்கள். "
-             "உங்கள் வங்கியின் அதிகாரப்பூர்வ செயலி அல்லது இணையதளத்தைத் திறக்கவும், அல்லது கார்டில் அச்சிடப்பட்ட எண்ணை அழைக்கவும். "
-             "cybercrime.gov.in இல் புகாரளிக்கலாம் அல்லது 1930 ஐ அழைக்கலாம்."),
-    "suspicious": ("இப்போதைக்கு எந்த இணைப்பையும் தொடாதீர்கள். நிறுவனத்தின் அதிகாரப்பூர்வ செயலி, "
-                   "இணையதளம் அல்லது கார்டில் உள்ள எண் மூலம் உறுதிசெய்யுங்கள்."),
-    "safe": "பொதுவான எச்சரிக்கை அறிகுறிகள் எதுவும் இல்லை. ஆனாலும் உங்கள் OTP அல்லது PIN ஐ யாரிடமும் பகிராதீர்கள்.",
-}
+REPORT_EN = " Report it at cybercrime.gov.in or call 1930."
+REPORT_TA = " cybercrime.gov.in இல் புகாரளிக்கவும் அல்லது 1930 ஐ அழைக்கவும்."
 
 
 def find_words(low, words):
@@ -94,9 +89,41 @@ def find_words(low, words):
     return found
 
 
+def build_advice(verdict, low, keys):
+    if verdict == "safe":
+        return ("No major warning signs found. If you did not expect this message, still do not click links or share your OTP or PIN.",
+                "முக்கிய எச்சரிக்கை அறிகுறிகள் இல்லை. இந்தச் செய்தியை எதிர்பார்க்கவில்லை என்றால், இணைப்புகளைத் தொடாதீர்கள், OTP அல்லது PIN ஐப் பகிராதீர்கள்.")
+
+    brand = None
+    for k, val in BRANDS.items():
+        if find_words(low, [k]):
+            brand = val
+            break
+
+    if brand and keys & {"private", "threat", "urgency", "link"}:
+        name, app_name = brand
+        return (f"Do not click the link or reply. Open the official {app_name} yourself, or call the number on the back of your card. Never share OTP or PIN." + REPORT_EN,
+                f"இணைப்பைத் தொடாதீர்கள், பதிலளிக்காதீர்கள். {app_name} அதிகாரப்பூர்வ செயலியை நீங்களே திறக்கவும், அல்லது கார்டின் பின்புறம் உள்ள எண்ணை அழைக்கவும். OTP, PIN ஐ யாரிடமும் பகிராதீர்கள்." + REPORT_TA)
+    if "parcel" in keys:
+        return ("Do not pay or click the link. Track your parcel only in the courier's official app or website." + REPORT_EN,
+                "பணம் செலுத்தாதீர்கள், இணைப்பைத் தொடாதீர்கள். பார்சலை கூரியர் நிறுவனத்தின் அதிகாரப்பூர்வ செயலி அல்லது இணையதளத்தில் மட்டும் கண்காணியுங்கள்." + REPORT_TA)
+    if "job" in keys:
+        return ("Do not send money or join the group. Real employers never ask you to pay to get a job." + REPORT_EN,
+                "பணம் அனுப்பாதீர்கள், குழுவில் சேராதீர்கள். உண்மையான நிறுவனங்கள் வேலைக்காகப் பணம் கேட்காது." + REPORT_TA)
+    if "reward" in keys:
+        return ("Do not pay any fee or share details to claim a prize or refund. Real prizes never ask for money first." + REPORT_EN,
+                "பரிசு அல்லது பணத்திருப்பத்தைப் பெற கட்டணம் செலுத்தாதீர்கள், விவரங்களைப் பகிராதீர்கள்." + REPORT_TA)
+    if verdict == "scam":
+        return ("Do not click any link or reply. Never share OTP, PIN or card details. Contact the company only through its official app, website or the number on your card." + REPORT_EN,
+                "இணைப்பைத் தொடாதீர்கள், பதிலளிக்காதீர்கள். OTP, PIN அல்லது கார்டு விவரங்களைப் பகிராதீர்கள். நிறுவனத்தின் அதிகாரப்பூர்வ செயலி, இணையதளம் அல்லது கார்டில் உள்ள எண் மூலம் மட்டும் தொடர்பு கொள்ளுங்கள்." + REPORT_TA)
+    return ("Do not click any link yet. Check with the company using its official app, website or the number on your card.",
+            "இப்போதைக்கு எந்த இணைப்பையும் தொடாதீர்கள். நிறுவனத்தின் அதிகாரப்பூர்வ செயலி, இணையதளம் அல்லது கார்டில் உள்ள எண் மூலம் உறுதிசெய்யுங்கள்.")
+
+
 def analyze_rules(text):
     low = text.lower()
     findings = []
+    breakdown = []
     matched = []
     score = 0
 
@@ -105,41 +132,56 @@ def analyze_rules(text):
         if found:
             score += r["weight"]
             matched += found
-            findings.append({"title": r["title"], "title_ta": r["title_ta"],
-                             "explain": r["explain"], "explain_ta": r["explain_ta"],
-                             "found": found})
+            findings.append({"key": r["key"], "title": r["title"], "title_ta": r["title_ta"],
+                             "explain": r["explain"], "explain_ta": r["explain_ta"], "found": found})
+            breakdown.append({"label": r["title"], "label_ta": r["title_ta"], "points": r["weight"]})
 
     links = re.findall(r"(?:https?://|www\.)\S+", low)
-    if links or re.search(SHORTENERS, low):
+    short = re.findall(SHORTENERS, low)
+    if links or short:
         weight = 25
-        explain = "Do not open links in unexpected messages. Real banks and delivery companies use their official app or website."
-        explain_ta = "எதிர்பாராத செய்திகளில் உள்ள இணைப்புகளைத் திறக்காதீர்கள். உண்மையான வங்கிகளும் டெலிவரி நிறுவனங்களும் தங்கள் அதிகாரப்பூர்வ செயலி அல்லது இணையதளத்தையே பயன்படுத்தும்."
-        if re.search(SHORTENERS, low) or re.search(ODD_TLDS, low):
+        explain = "Do not use this link. Verify only through the official bank app or website."
+        explain_ta = "இந்த இணைப்பைப் பயன்படுத்தாதீர்கள். அதிகாரப்பூர்வ வங்கி செயலி அல்லது இணையதளம் மூலம் மட்டுமே சரிபார்க்கவும்."
+        if short or re.search(ODD_TLDS, low):
             weight += 15
-            explain = "This link uses a shortener or an unusual web address. Scammers use these to hide where the link really goes."
-            explain_ta = "இந்த இணைப்பு சுருக்கப்பட்ட அல்லது வழக்கத்துக்கு மாறான முகவரியைப் பயன்படுத்துகிறது. இணைப்பு உண்மையில் எங்கு செல்கிறது என்பதை மறைக்க மோசடியாளர்கள் இதைப் பயன்படுத்துகிறார்கள்."
+            explain += " It uses a shortener or an unusual address that hides where it really goes."
+            explain_ta += " இது இணைப்பு எங்கு செல்கிறது என்பதை மறைக்கும் சுருக்கப்பட்ட அல்லது வழக்கத்துக்கு மாறான முகவரி."
         score += weight
-        findings.append({"title": "Suspicious link", "title_ta": "சந்தேகத்திற்குரிய இணைப்பு",
-                         "explain": explain, "explain_ta": explain_ta,
-                         "found": [l.rstrip(".,)") for l in links]})
+        found = [l.rstrip(".,)") for l in links] or short
+        matched += found
+        findings.append({"key": "link", "title": "Suspicious link", "title_ta": "சந்தேகத்திற்குரிய இணைப்பு",
+                         "explain": explain, "explain_ta": explain_ta, "found": found})
+        breakdown.append({"label": "Suspicious link", "label_ta": "சந்தேகத்திற்குரிய இணைப்பு", "points": weight})
 
     if re.search(r"(do not|don't|never) share", low) and not links:
-        score = max(0, score - 20)
+        delta = min(20, score)
+        if delta > 0:
+            score -= delta
+            breakdown.append({"label": "Message tells you not to share codes",
+                              "label_ta": "குறியீடுகளைப் பகிர வேண்டாம் என்று செய்தி கூறுகிறது",
+                              "points": -delta})
 
     score = min(100, score)
-    verdict = "scam" if score >= 60 else "suspicious" if score >= 25 else "safe"
+    verdict = "scam" if score >= 60 else "suspicious" if score >= 40 else "safe"
+    keys = {f["key"] for f in findings}
 
-    if findings:
-        reason = "Flagged for: " + ", ".join(f["title"].lower() for f in findings) + "."
-        reason_ta = "எச்சரிக்கை அறிகுறிகள்: " + ", ".join(f["title_ta"] for f in findings) + "."
+    if verdict == "safe" and findings:
+        reason = "Only minor warning signs were found, so this looks low risk."
+        reason_ta = "சிறிய எச்சரிக்கை அறிகுறிகள் மட்டுமே உள்ளன, எனவே ஆபத்து குறைவு."
+    elif findings:
+        reason = "Rule-based checks found these warning signs: " + " + ".join(f["title"].lower() for f in findings) + "."
+        reason_ta = "விதி அடிப்படையிலான சோதனை இந்த எச்சரிக்கை அறிகுறிகளைக் கண்டறிந்தது: " + " + ".join(f["title_ta"] for f in findings) + "."
     else:
-        reason = "No common scam warning signs were found. This does not guarantee the message is safe."
-        reason_ta = "பொதுவான மோசடி எச்சரிக்கை அறிகுறிகள் எதுவும் கண்டறியப்படவில்லை. இது செய்தி பாதுகாப்பானது என்பதற்கான உத்தரவாதம் அல்ல."
+        reason = "Rule-based checks found no common scam warning signs. This does not guarantee the message is safe."
+        reason_ta = "விதி அடிப்படையிலான சோதனையில் பொதுவான மோசடி அறிகுறிகள் எதுவும் இல்லை. இது செய்தி பாதுகாப்பானது என்பதற்கான உத்தரவாதம் அல்ல."
+
+    advice, advice_ta = build_advice(verdict, low, keys)
 
     return {"verdict": verdict, "risk_score": score,
             "reason": reason, "reason_ta": reason_ta,
-            "advice": ADVICE_EN[verdict], "advice_ta": ADVICE_TA[verdict],
-            "findings": findings, "matched": matched, "mode": "rules"}
+            "advice": advice, "advice_ta": advice_ta,
+            "findings": findings, "breakdown": breakdown,
+            "matched": matched, "mode": "rules"}
 
 
 PROMPT = """You are a scam SMS detector for users in India. Analyze the message and reply ONLY with JSON:
@@ -161,6 +203,7 @@ def analyze(msg: Message):
     text = msg.text.strip()[:2000]
     result = analyze_rules(text)
 
+    # Optional AI layer. If it fails, the rule-based result above is returned.
     if AI_ENABLED:
         try:
             res = client.chat.completions.create(
@@ -175,12 +218,14 @@ def analyze(msg: Message):
             ai = json.loads(re.search(r"\{.*\}", raw, re.S).group())
             if ai.get("verdict") in ("safe", "suspicious", "scam"):
                 v = ai["verdict"]
+                keys = {f["key"] for f in result["findings"]}
+                fb_en, fb_ta = build_advice(v, text.lower(), keys)
                 result["verdict"] = v
                 result["risk_score"] = int(ai.get("risk_score", result["risk_score"]))
                 result["reason"] = ai.get("reason") or result["reason"]
-                result["advice"] = ai.get("advice") or ADVICE_EN[v]
+                result["advice"] = ai.get("advice") or fb_en
                 result["reason_ta"] = ai.get("reason_ta") or result["reason_ta"]
-                result["advice_ta"] = ai.get("advice_ta") or ADVICE_TA[v]
+                result["advice_ta"] = ai.get("advice_ta") or fb_ta
                 result["mode"] = "ai"
         except Exception as e:
             print("AI call failed, using rules:", e)

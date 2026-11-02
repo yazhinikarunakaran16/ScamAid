@@ -24,6 +24,7 @@
         <span>Try an example:</span>
         <button type="button" class="ex-btn" data-text="Dear customer, your SBI account will be blocked today. Update KYC now: http://sbi-kyc.xyz">Bank scam</button>
         <button type="button" class="ex-btn" data-text="Your parcel is held at customs. Pay Rs 50 immediately: www.track-parcel.top">Parcel scam</button>
+        <button type="button" class="ex-btn" data-text="123456 is your OTP for payment of Rs 500 at Amazon. Do not share it with anyone. -SBI">Real bank OTP</button>
         <button type="button" class="ex-btn" data-text="Amma, I will reach home by 7 pm. Please keep dinner ready.">Normal message</button>
       </div>
       <button id="checkBtn">Check Message</button>
@@ -38,8 +39,8 @@
       </div>
       <div class="meter"><div id="meterFill" class="meter-fill"></div></div>
 
-      <h3 id="hMessage">Your message</h3>
-      <p id="highlighted" class="msg-box"></p>
+      <h3 id="hBreak">How the score was calculated</h3>
+      <ul id="breakdown" class="breakdown"></ul>
 
       <h3 id="hWhy">Why?</h3>
       <p id="reason"></p>
@@ -49,17 +50,24 @@
 
       <h3 id="hAdvice">What should you do?</h3>
       <p id="advice"></p>
-      <button id="listenBtn" type="button" class="listen-btn">🔊 Listen / கேளுங்கள்</button>
-      <button id="copyBtn" type="button" class="listen-btn">📋 Copy</button>
-<a id="reportLink" class="report-link" href="https://cybercrime.gov.in" target="_blank" rel="noopener">🚨 Report at cybercrime.gov.in (call 1930)</a>
+
+      <div class="actions">
+        <button id="listenBtn" type="button" class="listen-btn">🔊 Listen / கேளுங்கள்</button>
+        <button id="copyBtn" type="button" class="listen-btn">📋 Copy</button>
+        <a id="reportLink" class="report-link" href="https://cybercrime.gov.in" target="_blank" rel="noopener">🚨 Report at cybercrime.gov.in (call 1930)</a>
+      </div>
+      <p id="privacyNote" class="note"></p>
+
+      <h3 id="hMessage">Your message</h3>
+      <p id="highlighted" class="msg-box"></p>
     </section>
 
     <section class="how">
       <h2>How it works</h2>
       <div class="steps">
         <div class="step"><b>1. Paste</b><p>Copy the message you received.</p></div>
-        <div class="step"><b>2. Analyze</b><p>AI and rule checks look for scam patterns.</p></div>
-        <div class="step"><b>3. Stay safe</b><p>Get a risk score and clear advice.</p></div>
+        <div class="step"><b>2. Analyze</b><p>Rule checks (and AI when connected) look for scam patterns.</p></div>
+        <div class="step"><b>3. Stay safe</b><p>Get a risk estimate, reasons and a clear next step.</p></div>
       </div>
     </section>
   </main>
