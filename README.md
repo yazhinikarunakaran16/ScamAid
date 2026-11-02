@@ -49,3 +49,13 @@ uvicorn app:app --reload
 
 ### Light mode
 ![Parcel scam result](screenshots/parcel-light.png)
+## Features
+- Risk score meter (0-100)
+- Tamil and English results
+- Highlights suspicious words in the message
+- Warning signs with simple explanations
+- Voice: read results aloud (Listen button)
+- Copy result to share with family
+- One-click report link (cybercrime.gov.in, helpline 1930)
+- Dark and light mode
+- AI analysis using Meta Model API (rule-based fallback)
