@@ -11,7 +11,7 @@ const COLORS = { safe: "#16a34a", suspicious: "#f59e0b", scam: "#dc2626" };
 const LABELS = {
   en: { msg: "Your message (warning words highlighted)", why: "Why?", warn: "Warning signs",
         advice: "What should you do?", brk: "How the score was calculated",
-        risk: "Risk score", riskEst: "Risk estimate", total: "Total",
+        risk: "Risk score", riskEst: "Risk estimate", total: "Total", brkAI: "Rule-based warning signs (AI score may differ)", aiTotal: "AI risk score",
         btn: "தமிழில் பார்க்க", none: "No warning signs were added to the score.",
         noFlags: "No obvious warning signs found.", found: "Found",
         copy: "📋 Copy", copied: "✅ Copied",
@@ -21,7 +21,7 @@ const LABELS = {
         ai: "AI + rules", rules: "Rule-based check" },
   ta: { msg: "உங்கள் செய்தி (எச்சரிக்கை சொற்கள் குறிக்கப்பட்டுள்ளன)", why: "ஏன்?", warn: "எச்சரிக்கை அறிகுறிகள்",
         advice: "நீங்கள் என்ன செய்ய வேண்டும்?", brk: "மதிப்பெண் எப்படி வந்தது",
-        risk: "ஆபத்து மதிப்பெண்", riskEst: "ஆபத்து மதிப்பீடு", total: "மொத்தம்",
+        risk: "ஆபத்து மதிப்பெண்", riskEst: "ஆபத்து மதிப்பீடு", total: "மொத்தம்", brkAI: "விதி அடிப்படையிலான எச்சரிக்கைகள் (AI மதிப்பெண் வேறுபடலாம்)", aiTotal: "AI ஆபத்து மதிப்பெண்",
         btn: "View in English", none: "மதிப்பெண்ணில் எந்த எச்சரிக்கையும் சேர்க்கப்படவில்லை.",
         noFlags: "வெளிப்படையான எச்சரிக்கை அறிகுறிகள் இல்லை.", found: "கண்டறிந்தது",
         copy: "📋 நகலெடு", copied: "✅ நகலெடுக்கப்பட்டது",
@@ -142,7 +142,7 @@ function render() {
   setTimeout(() => { fill.style.width = score + "%"; }, 50);
 
   document.getElementById("scoreNote").textContent = L.scoreNote;
-  document.getElementById("hBreak").textContent = L.brk;
+  document.getElementById("hBreak").textContent = isAI ? L.brkAI : L.brk;
   document.getElementById("hWhy").textContent = L.why;
   document.getElementById("hWarn").textContent = L.warn;
   document.getElementById("hAdvice").textContent = L.advice;
@@ -167,9 +167,9 @@ function render() {
     const tot = document.createElement("li");
     tot.className = "total";
     const tn = document.createElement("span");
-    tn.textContent = L.total;
+    tn.textContent = isAI ? L.aiTotal : L.total;
     const tp = document.createElement("b");
-    tp.textContent = "= " + score + " / 100";
+    tp.textContent = (isAI ? "" : "= ") + score + " / 100";
     tot.appendChild(tn);
     tot.appendChild(tp);
     ul.appendChild(tot);
