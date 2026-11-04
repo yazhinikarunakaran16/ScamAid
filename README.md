@@ -8,13 +8,19 @@ Built for the Meta Global AI Developer Hackathon.
 
 ## Screenshots
 
-### Dark mode
-![Home](screenshots/home.png)
-![Bank scam result](screenshots/bank-scam.png)
-![Safe message](screenshots/safe.png)
-
 ### Light mode
-![Parcel scam result](screenshots/parcel-light.png)
+![Light mode](screenshots/light-mode.png)
+
+### Dark mode
+![Dark mode](screenshots/dark-mode.png)
+
+### Scam examples
+![Bank scam](screenshots/bank.png)
+![Parcel scam](screenshots/parcel.png)
+
+### Safe examples
+![Real bank OTP](screenshots/real-bank-otp.png)
+![Normal message](screenshots/normal-message.png)
 
 ## Features
 - Risk estimate (0-100) with a breakdown of how the score was calculated
